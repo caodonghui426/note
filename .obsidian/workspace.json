@@ -4,16 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "e3c9779aeab2c646",
+        "id": "017bc2cf7738e046",
         "type": "tabs",
         "children": [
           {
-            "id": "584bb9839e0b2582",
+            "id": "eaf120e6907f8ff0",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md",
+                "file": "面试/Java/Java基础.md",
                 "mode": "source",
                 "source": false
               }
@@ -69,7 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 202.50271224975586
   },
   "right": {
     "id": "be57ed885b42fe5c",
@@ -85,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md",
+                "file": "面试/Java/Java基础.md",
                 "collapseAll": true,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md",
+                "file": "面试/Java/Java基础.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md"
+                "file": "面试/Java/Java基础.md"
               }
             }
           }
@@ -134,7 +134,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -146,15 +146,36 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "584bb9839e0b2582",
+  "active": "eaf120e6907f8ff0",
   "lastOpenFiles": [
-    "README.md",
-    "深度学习/论文阅读/README.md",
-    "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md",
-    "深度学习/论文阅读/img",
+    "深度学习/论文阅读/A new large dataset and a transfer learning methodology for plant phenotyping in Vertical Farms.md",
+    "面试/Java/Java基础.md",
+    "面试/Java",
+    "深度学习/论文阅读/Adapting Vision Foundation Models for Plant Phenotyping.md",
+    "深度学习/论文阅读/img/CleanShot 2023-11-23 at 10.42.52@2x.png",
+    "深度学习/论文阅读/img/CleanShot 2023-11-16 at 10.50.45@2x.png",
+    "img/c.md",
     "深度学习/深度学习.md",
+    "深度学习/论文阅读/README.md",
+    "VLMO.md",
+    "深度学习/论文阅读/VLMO - Unified Vision-Language Pre-Training with Mixture-of-Modality-Experts.md",
+    "深度学习/论文阅读/Multimodal Contrastive Learning with LIMoE- the Language-Image Mixture of Experts.md",
+    "深度学习/论文阅读/OUTRAGEOUSLY LARGE NEURAL NETWORKS - THE SPARSELY-GATED MIXTURE-OF-EXPERTS LAYER.md",
+    "深度学习/论文阅读/img/CleanShot 2023-10-24 at 19.13.25@2x.png",
+    "深度学习/论文阅读/img/CleanShot 2023-10-24 at 10.16.06@2x.png",
+    "img",
+    "深度学习/论文阅读/ViST- A Ubiquitous Model with Multimodal Fusion for Crop Growth Prediction.md",
+    "深度学习/507/2023年数据处理.md",
+    "未命名.canvas",
+    "面试/算法/LeetCode笔记.md",
+    "深度学习/507",
+    "面试/未命名",
+    "面试/八股",
+    "面试/算法",
+    "面试",
+    "README.md",
+    "深度学习/论文阅读/img",
     "深度学习/论文阅读",
-    "开发",
-    "深度学习"
+    "开发"
   ]
 }
