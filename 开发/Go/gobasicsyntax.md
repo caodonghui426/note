@@ -355,6 +355,56 @@ func main(){
 
 ## 9. 接口interface
 
+在Go语言中，接口是一种抽象类型，它定义了一组方法的签名，但不包含这些方法的实现。主要特点和作用包括：
+
+* 定义行为规范
+* 实现多态性
+* 解耦代码
+
+```go
+package main
+
+import "fmt"
+
+// 定义接口
+type Shape interface {
+    Area() float64
+}
+
+// 圆形类型
+type Circle struct {
+    Radius float64
+}
+
+// 实现接口的 Area 方法
+func (c Circle) Area() float64 {
+    return 3.14 * c.Radius * c.Radius
+}
+
+// 矩形类型
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+// 实现接口的 Area 方法
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func printArea(s Shape) {
+    fmt.Println("面积:", s.Area())
+}
+
+func main() {
+    c := Circle{Radius: 5}
+    r := Rectangle{Width: 4, Height: 6}
+
+    printArea(c)
+    printArea(r)
+}
+```
+
 ## 10. 并发神器goroutine和channel
 
 ## 11. 断言Assertion和反射reflect
