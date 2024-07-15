@@ -407,9 +407,494 @@ func main() {
 
 ## 10. 并发神器goroutine和channel
 
+协程（goroutine）是一种轻量级的线程实现，它由 Go 运行时（runtime）管理和调度。协程是 Go 语言并发编程的核心概念，它允许开发者轻松地实现高性能、高并发的程序。
+
+#### 并发（Concurrency）
+
+并发是指多个任务在同一时间段内交替执行。这些任务可能是由同一个进程中的多个线程，或者是由多个进程执行。在单核 CPU 系统中，任务实际上是通过时间片轮转的方式交替执行的，看起来好像是在“同时”进行。在多核 CPU 系统中，任务可以在不同的核心上同时执行，但仍然属于并发范畴，因为这些任务并没有在同一时刻执行。
+
+并发的关键在于任务的交替执行，而不是它们是否在同一时刻执行。例如，在单核 CPU 系统中，两个任务在一个时间片内分别执行一部分，然后交换，这就是并发。
+
+#### 并行（Parallelism）
+
+并行是指多个任务在同一时刻同时执行。这通常需要多个 CPU 核心或多个处理器来完成。在并行计算中，每个任务都在一个独立的核心或处理器上执行，从而实现了任务的真正同步进行。
+
+并行的关键在于任务的同步执行。例如，在一个四核 CPU 系统中，四个任务可以同时在四个不同的核心上执行，这就是并行。
+
+#### 并发与并行的关系
+
+并发和并行之间的关系可以用以下方式描述：
+
+1. 并发是一种更为宽泛的概念，它包括了并行。也就是说，所有的并行都是并发，但并非所有的并发都是并行。
+2. 在某些情况下，可以通过增加 CPU 核心数或处理器数量，将并发任务转换为并行任务，从而提高程序的执行效率。
+3. 并发编程关注任务的交替执行和资源共享，需要处理竞争条件、死锁等问题。并行编程关注任务的同步执行和数据分解，需要处理数据依赖和通信开销等问题。
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("In main()")
+	go longWait()
+	go shortWait()
+	fmt.Println("About to sleep in main()")
+	time.Sleep(10 * 1e9)
+	fmt.Println("At the end of main()")
+}
+/* goroutine
+In main()
+About to sleep in main()
+Beginning longWait()
+Beginning shortWait()
+At the end of shortWait()
+At the end of longWait()
+At the end of main()
+*/
+/*
+In main()
+Beginning longWait()
+At the end of longWait()
+Beginning shortWait()
+At the end of shortWait()
+About to sleep in main()
+At the end of main()
+
+*/
+
+func longWait() {
+	fmt.Println("Beginning longWait()")
+	time.Sleep(5 * 1e9)
+	fmt.Println("At the end of longWait()")
+}
+
+func shortWait() {
+	fmt.Println("Beginning shortWait()")
+	time.Sleep(2 * 1e9)
+	fmt.Println("At the end of shortWait()")
+}
+```
+
+通道（channel）是一种用于在协程之间传递数据的同步原语。goroutine之间通信的桥梁。
+
+无缓冲区：
+
+使用goroutine，自执行函数会跑到一边去执行，当chan需要取的时候，就会往下执行一步。（存一个取一个）
+
+```go
+func main() {
+	c1 := make(chan int)
+
+	go func() {
+		for i := 0; i < 10; i++ {
+			c1 <- i
+		}
+	}()
+
+	for i := 0; i < 10; i++ {
+		fmt.Println(<-c1)
+	}
+
+}
+//0
+//1
+//2
+//3
+//4
+//5
+//6
+//7
+//8
+//9
+```
+
+有缓冲区：
+
+在有10个缓冲区的情况下，先存后取，即会先执行自执行的函数，等待缓冲区满了，再进行取。
+
+如果缓冲区不够的情况下，比如只有5个，流程应该是先存5个，然后根据队列的形式，出一个进一个。
+
+```go
+func main() {
+	c1 := make(chan int, 10)
+
+	go func() {
+		for i := 0; i < 10; i++ {
+			c1 <- i
+		}
+	}()
+
+	for i := 0; i < 10; i++ {
+		fmt.Println(<-c1)
+	}
+
+}
+```
+
+前面两个有缓冲区和无缓冲区都是可读可写的，对于仅仅可读和可写的使用方法如下：
+
+```go
+var readc <-chan int = c1
+var writec chan<- int = c1
+```
+
+对于chan是可以关闭的，对于下面的情况，如果提前关闭了，再进行写，便不会生效，如果持续读出的话会出现panic。
+
+```go
+func main() {
+	c1 := make(chan int, 5)
+
+	c1 <- 1
+	c1 <- 2
+	c1 <- 3
+	close(c1)
+	c1 <- 4
+	c1 <- 5
+
+	fmt.Println(<-c1)
+	fmt.Println(<-c1)
+	fmt.Println(<-c1)
+	fmt.Println(<-c1)
+	fmt.Println(<-c1)
+
+}
+```
+
+如果使用for range 读取的话，不适用close会出现死锁
+
+```go
+func main() {
+	c1 := make(chan int, 5)
+
+	c1 <- 1
+	c1 <- 2
+	c1 <- 3
+	c1 <- 4
+	c1 <- 5
+	close(c1)
+
+	for c := range c1 {
+		fmt.Println(c)
+	}
+
+}
+```
+
+使用select防止使用chan的时候panic：
+
+如果没有符合条件的，那么就会执行default，如果都符合条件，就会随机执行一个，或者其中几个，或者全部执行。
+
+```go
+func main() {
+	c1 := make(chan int, 1)
+	c2 := make(chan int, 1)
+	c3 := make(chan int, 1)
+	c1 <- 1
+	c2 <- 1
+	c3 <- 1
+	select {
+	case <-c1:
+		fmt.Println("c1")
+	case <-c2:
+		fmt.Println("c2")
+	case <-c3:
+		fmt.Println("c3")
+	default:
+		fmt.Println("都不满足")
+	}
+}
+```
+
+goroutine与通道的使用：
+
+```go
+func main() {
+	c := make(chan int, 1)
+	var readC <-chan int = c
+	var writeC chan<- int = c
+	go SetChan(writeC)
+	GetChan(readC)
+}
+
+func SetChan(writeC chan<- int) {
+	for i := 0; i < 10; i++ {
+		writeC <- i
+	}
+}
+
+func GetChan(readC <-chan int) {
+	for i := 0; i < 10; i++ {
+		fmt.Printf("In GetChan, get: %d \n", <-readC)
+	}
+}
+```
+
 ## 11. 断言Assertion和反射reflect
 
+断言是指把一个接口指定为原始类型。
+
+**断言的基础使用：**
+
+v.(断言为原始类型).调用原始类型方法或者变量
+
+```go
+type User struct {
+	Name string
+	Age  int
+	Sex  bool
+}
+
+type Student struct {
+	User
+}
+
+func (u User) SayName(name string) {
+	fmt.Println("我的名字是：", name)
+}
+
+func main() {
+	u := User{
+		Name: "LittlePaddy",
+		Age:  18,
+		Sex:  true,
+	}
+	check(u)
+}
+
+func check(v interface{}) {
+	v.(User).SayName(v.(User).Name)
+}
+```
+
+对断言的使用，常用的方式如下，使用switch case进行使用：
+
+```go
+type User struct {
+	Name string
+	Age  int
+	Sex  bool
+}
+
+type Student struct {
+	Class string
+	User
+}
+
+func (u User) SayName(name string) {
+	fmt.Println("我的名字是：", name)
+}
+
+func main() {
+	u := User{
+		Name: "LittlePaddy",
+		Age:  18,
+		Sex:  true,
+	}
+	s := Student{
+		"一组",
+		User{
+			Name: "LittlePaddy",
+			Age:  18,
+			Sex:  true,
+		},
+	}
+	check(u)
+	check(s)
+}
+
+func check(v interface{}) {
+	switch v.(type) {
+	case User:
+		fmt.Println("我是User")
+		fmt.Println(v.(User).Name)
+	case Student:
+		fmt.Println("我是Student")
+		fmt.Println(v.(Student).Class)
+	default:
+		fmt.Println("没有符合的")
+	}
+}
+```
+
+**反射（reflection）**是指在**运行时动态地**获取变量的类型信息和值。通过反射，我们可以检查变量的类型，修改其值，以及调用其方法等。Go 的反射功能主要基于 `reflect` 包来实现。
+
+下面是一些常用的取值操作：
+
+```go
+type User struct {
+	Name string
+	Age  int
+	Sex  bool
+}
+
+type Student struct {
+	Class string
+	User
+}
+
+func (u User) SayName(name string) {
+	fmt.Println("我的名字是：", name)
+}
+
+func main() {
+	u := User{
+		Name: "LittlePaddy",
+		Age:  18,
+		Sex:  true,
+	}
+	s := Student{"三年二班", u}
+	//check(u)
+	check(s)
+	//fmt.Println(s)
+}
+
+func check(inter interface{}) {
+	t := reflect.TypeOf(inter)  // 动态获取输入参数接口中的值的类型
+	v := reflect.ValueOf(inter) // 获取参数接口中的数据的值
+	fmt.Println(t, v)
+	for i := 0; i < t.NumField(); i++ {
+		fmt.Println(v.Field(i)) // 用来获取值
+	}
+	fmt.Println(v.FieldByIndex([]int{1, 0})) // 根据层级取值
+	tKind := t.Kind()                        // 获取类型
+	fmt.Println(tKind)
+	if tKind == reflect.Struct {
+		fmt.Println("我是Struct")
+	}
+}
+```
+
+下面是通过反射修改值的操作：
+
+```go
+func main() {
+	u := User{
+		Name: "LittlePaddy",
+		Age:  18,
+		Sex:  true,
+	}
+	s := Student{"三年二班", u}
+	//check(u)
+	check(&s) // 如果要修改值的话，需要传递地址
+	fmt.Println(s)
+}
+
+func check(inter interface{}) {
+	v := reflect.ValueOf(inter) // 获取参数接口中的数据的值
+	e := v.Elem()
+	e.FieldByName("Class").SetString("四年二班")
+	fmt.Println(inter)
+}
+```
+
+下面是通过反射调用方法的使用方式：
+
+```go
+func main() {
+	u := User{
+		Name: "LittlePaddy",
+		Age:  18,
+		Sex:  true,
+	}
+	//s := Student{"三年二班", u}
+	check(u)
+	//check(&s) // 如果要修改值的话，需要传递地址
+	//fmt.Println(s)
+}
+
+func check(inter interface{}) {
+	v := reflect.ValueOf(inter) // 获取参数接口中的数据的值
+	m := v.Method(0)
+	m.Call([]reflect.Value{reflect.ValueOf("LittlePaddy2")})
+}
+// 我的名字是： LittlePaddy2
+```
+
 ## 12. context包的基础使用
+
+在不使用context包的时候，使用通道对子进程进行管理：
+
+```go
+func main() {
+	flag := make(chan bool)
+	message := make(chan int)
+	go son(flag, message)
+	for i := 0; i < 10; i++ {
+		message <- i
+	}
+	flag <- true
+	time.Sleep(time.Second)
+	fmt.Println("主进程结束")
+}
+
+func son(flag chan bool, msg chan int) {
+	t := time.Tick(time.Second) // 用于创建定时器(Ticker)，但是只提供对其滴答通道(ticking channel)的访问
+	for _ = range t {
+		select {
+		case m := <-msg:
+			fmt.Printf("接收到值：%d\n", m)
+		case <-flag:
+			fmt.Println("子进程结束了")
+			return
+		}
+	}
+}
+```
+
+**WithCancel：**使用`context`来替换`flag`通道。`main`函数中创建了一个带有取消功能的`context`，并将它传递给`son`协程。当`main`函数完成发送数据后，调用`cancel()`函数来通知`son`协程结束。`son`协程通过监听`ctx.Done()`来接收结束信号。
+
+```go
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	message := make(chan int)
+	go son(ctx, message)
+	for i := 0; i < 10; i++ {
+		message <- i
+	}
+	cancel() // 通知子进程结束
+	time.Sleep(time.Second)
+	fmt.Println("主进程结束")
+}
+
+func son(ctx context.Context, msg chan int) {
+	t := time.Tick(time.Second) // 用于创建定时器(Ticker)，但是只提供对其滴答通道(ticking channel)的访问
+	for _ = range t {
+		select {
+		case m := <-msg:
+			fmt.Printf("接收到值：%d\n", m)
+		case <-ctx.Done():
+			fmt.Println("子进程结束了")
+			return
+		}
+	}
+}
+```
+
+**WithDeadline：**创建一个有截止时间的`context`。当到达截止时间时，`ctx.Done()`会接收到一个信号，表示该`context`已经结束。例如：
+
+```go
+deadline := time.Now().Add(5 * time.Second)
+ctx, cancel := context.WithDeadline(context.Background(), deadline)
+defer cancel()
+```
+
+**WithTimeout**：创建一个有超时时间的`context`。当超时到达时，`ctx.Done()`会接收到一个信号，表示该`context`已经结束。例如：
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+```
+
+**WithValue**：创建一个可以存储键值对的`context`。这可以用于在协程之间传递元数据。例如：
+
+```go
+ctx := context.WithValue(context.Background(), key, value)
+```
+
+在协程中，可以使用`ctx.Value(key)`来获取存储的值。但请注意，`context`应该用于传递请求范围的元数据，而不应该用于传递可选参数或配置选项。
 
 ## 13. 并发编程sync包的使用
 
