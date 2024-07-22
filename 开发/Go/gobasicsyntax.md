@@ -405,6 +405,75 @@ func main() {
 }
 ```
 
+* `Logger`接口定义了一个通用的日志记录器接口，它声明了`Log`方法。
+* `FileLogger`和`ConsoleLogger`结构体分别实现了`Logger`接口，它们提供了不同的日志记录方式（文件和控制台）。
+* 由于`FileLogger`和`ConsoleLogger`都实现了`Logger`接口，我们可以在不修改调用者代码的情况下，灵活地替换日志记录器的实现。这就是多态的概念，它允许我们根据运行时的条件选择合适的实现。
+* <mark style="color:blue;">工厂函数是一种设计模式，用于封装对象的创建过程。这样可以使得代码更加灵活和可维护，特别是在涉及到依赖注入或者需要根据不同条件创建不同类型实例的场景。</mark>
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+type Logger interface {
+	Log(message string)
+}
+
+type FileLogger struct {
+	filePath string
+}
+
+func (l *FileLogger) Log(message string) {
+	log.Println("FileLogger:", message)
+}
+
+type ConsoleLogger struct {
+	prefix string
+}
+
+func (l *ConsoleLogger) Log(message string) {
+	log.Println("ConsoleLogger:", message)
+}
+
+// 定义一个工厂函数NewLogger，根据配置创建不同类型的日志记录器。
+type Config struct {
+	LogToFile bool
+	FilePath  string
+	Prefix    string
+}
+
+func NewLogger(config Config) Logger {
+	if config.LogToFile {
+		return &FileLogger{filePath: config.FilePath}
+	} else {
+		return &ConsoleLogger{prefix: config.Prefix}
+	}
+}
+
+func main() {
+	config := Config{
+		LogToFile: false, // 设置为true以使用文件日志记录器，false以使用控制台日志记录器
+		FilePath:  "log.txt",
+		Prefix:    "INFO",
+	}
+
+	logger := NewLogger(config)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		logger.Log("HTTP request received")
+		fmt.Fprintf(w, "Hello, World!")
+	})
+
+	log.Println("Starting server on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+```
+
 ## 10. 并发神器goroutine和channel
 
 协程（goroutine）是一种轻量级的线程实现，它由 Go 运行时（runtime）管理和调度。协程是 Go 语言并发编程的核心概念，它允许开发者轻松地实现高性能、高并发的程序。
